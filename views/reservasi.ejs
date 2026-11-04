@@ -1,0 +1,71 @@
+<%- include('partials/head') %>
+
+<div class="mb-8">
+  <h1 class="text-2xl font-bold tracking-tight text-gray-800">Reservasi</h1>
+  <p class="text-sm text-gray-400 mt-1">Pilih tanggal dan jam yang masih tersedia.</p>
+</div>
+
+<div class="grid md:grid-cols-3 gap-8 items-start">
+  <section class="rounded-xl border border-gray-200 p-6">
+    <form method="GET" action="/reservasi" class="mb-6 pb-6 border-b border-gray-100">
+      <label class="block text-sm text-gray-500 mb-1.5" for="cek">Tanggal</label>
+      <div class="flex gap-2">
+        <input id="cek" type="date" name="tanggal" value="<%= tanggal %>" min="<%= hariIni %>" class="flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-500">
+        <button class="px-4 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 transition-colors">Cek</button>
+      </div>
+    </form>
+
+    <form method="POST" action="/reservasi" class="space-y-4">
+      <input type="hidden" name="tanggal" value="<%= tanggal %>">
+      <p class="text-sm text-gray-500">Reservasi untuk <span class="font-semibold text-gray-800"><%= fmt.tanggalIndo(tanggal) %></span></p>
+
+      <div>
+        <label class="block text-sm text-gray-500 mb-1.5" for="nama">Nama</label>
+        <input id="nama" name="nama" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-500">
+      </div>
+      <div>
+        <label class="block text-sm text-gray-500 mb-1.5" for="jam">Jam</label>
+        <select id="jam" name="jam" required class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-500">
+          <% slotJam.forEach((j) => { %>
+            <option value="<%= j %>" <%= terpakai.includes(j) ? 'disabled' : '' %>><%= j %><%= terpakai.includes(j) ? ' (penuh)' : '' %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm text-gray-500 mb-1.5" for="produkId">Layanan</label>
+        <select id="produkId" name="produkId" required class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-500">
+          <% produk.filter((p) => p.kategori === 'Layanan').forEach((p) => { %>
+            <option value="<%= p.id %>"><%= p.nama %> – <%= fmt.rupiah(p.harga) %></option>
+          <% }) %>
+        </select>
+      </div>
+      <button class="w-full bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors">Reservasi</button>
+    </form>
+  </section>
+
+  <section class="md:col-span-2">
+    <h2 class="font-bold text-gray-800 mb-4">Reservasi mendatang</h2>
+    <% if (daftar.length === 0) { %>
+      <div class="rounded-xl border border-dashed border-gray-300 p-10 text-center text-sm text-gray-400">Belum ada reservasi.</div>
+    <% } %>
+    <div class="space-y-3">
+      <% daftar.forEach((r) => { %>
+        <div class="rounded-xl border border-gray-200 p-4 flex items-center gap-5">
+          <div class="w-24 shrink-0 text-center border-r border-gray-100 pr-5">
+            <p class="text-xs text-gray-400"><%= fmt.tanggalIndo(r.tanggal) %></p>
+            <p class="mt-0.5 text-lg font-bold text-gray-800"><%= r.jam %></p>
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="font-semibold text-gray-800 truncate"><%= r.nama %></p>
+            <p class="text-sm text-gray-400 truncate"><%= r.produk %></p>
+          </div>
+          <form method="POST" action="/reservasi/<%= r.id %>/hapus" onsubmit="return confirm('Hapus reservasi ini?');">
+            <button class="text-sm text-gray-400 hover:text-gray-800 px-2 py-1.5 transition-colors" title="Hapus">Hapus</button>
+          </form>
+        </div>
+      <% }) %>
+    </div>
+  </section>
+</div>
+
+<%- include('partials/foot') %>

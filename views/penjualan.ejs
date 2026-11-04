@@ -1,0 +1,51 @@
+<%- include('partials/head') %>
+
+<div class="mb-8">
+  <h1 class="text-2xl font-bold tracking-tight text-gray-800">Catatan penjualan</h1>
+  <p class="text-sm text-gray-400 mt-1">Tercatat otomatis saat barber menekan "Selesai" di halaman Antrean.</p>
+</div>
+
+<div class="grid grid-cols-2 gap-4 mb-8">
+  <div class="rounded-xl border border-gray-200 p-6">
+    <p class="text-sm text-gray-400">Total pendapatan</p>
+    <p class="mt-2 text-3xl font-bold text-gray-800"><%= fmt.rupiah(total) %></p>
+  </div>
+  <div class="rounded-xl border border-gray-200 p-6">
+    <p class="text-sm text-gray-400">Jumlah transaksi</p>
+    <p class="mt-2 text-3xl font-bold text-gray-800"><%= jumlah %></p>
+  </div>
+</div>
+
+<div class="rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
+  <table class="w-full text-sm">
+    <thead class="bg-gray-50 text-left text-xs uppercase tracking-wider text-gray-400">
+      <tr>
+        <th class="px-5 py-3 font-semibold">Waktu</th>
+        <th class="px-5 py-3 font-semibold">Pelanggan</th>
+        <th class="px-5 py-3 font-semibold">Layanan / produk</th>
+        <th class="px-5 py-3 font-semibold text-right">Harga</th>
+        <th class="px-5 py-3 font-semibold text-right">Aksi</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      <% if (data.length === 0) { %>
+        <tr><td colspan="5" class="px-5 py-10 text-center text-gray-400">Belum ada transaksi.</td></tr>
+      <% } %>
+      <% data.forEach((d) => { %>
+        <tr class="hover:bg-gray-50">
+          <td class="px-5 py-3.5 text-gray-500"><%= fmt.jam(d.waktu) %></td>
+          <td class="px-5 py-3.5 text-gray-800"><%= d.nama %></td>
+          <td class="px-5 py-3.5"><%= d.produk %></td>
+          <td class="px-5 py-3.5 text-right font-semibold text-gray-700"><%= fmt.rupiah(d.harga) %></td>
+          <td class="px-5 py-3.5 text-right">
+            <form method="POST" action="/penjualan/<%= d.id %>/hapus" onsubmit="return confirm('Hapus catatan penjualan ini?');">
+              <button class="text-gray-400 hover:text-gray-800 transition-colors">Hapus</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('partials/foot') %>

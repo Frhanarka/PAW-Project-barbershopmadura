@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= judul %> | <%= namaToko %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { fontFamily: { sans: ['Plus Jakarta Sans', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'sans-serif'] } } }
+    };
+  </script>
+</head>
+<body class="bg-white text-gray-600 antialiased min-h-screen flex flex-col font-sans">
+  <header class="border-b border-gray-200 bg-white">
+    <nav class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-3">
+        <span class="w-8 h-8 rounded-md bg-gray-800 text-white text-sm font-bold flex items-center justify-center">BM</span>
+        <span class="font-bold text-gray-800 tracking-tight"><%= namaToko %></span>
+      </a>
+      <ul class="flex items-center gap-6 text-sm">
+        <% [['beranda','/','Beranda'],['antrean','/antrean','Antrean'],['reservasi','/reservasi','Reservasi'],['penjualan','/penjualan','Penjualan']].forEach(([key, href, label]) => { %>
+          <li>
+            <a href="<%= href %>" class="py-5 inline-block border-b-2 <%= aktif === key ? 'border-gray-800 text-gray-800 font-semibold' : 'border-transparent text-gray-500 hover:text-gray-800' %>"><%= label %></a>
+          </li>
+        <% }) %>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="flex-1 max-w-5xl w-full mx-auto px-6 py-10">
+    <% if (pesan) { %>
+      <div class="mb-8 rounded-lg border px-4 py-3 text-sm flex items-start gap-3 <%= pesan.tipe === 'galat' ? 'border-gray-400 bg-gray-100 text-gray-800' : 'border-gray-200 bg-gray-50 text-gray-700' %>">
+        <span class="font-bold text-gray-800"><%= pesan.tipe === 'galat' ? 'Perhatian' : 'Berhasil' %></span>
+        <span><%= pesan.teks %></span>
+      </div>
+    <% } %>

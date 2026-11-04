@@ -1,0 +1,41 @@
+<%- include('partials/head') %>
+
+<section class="rounded-2xl border border-gray-200 bg-gray-50 px-8 py-14 md:px-12 mb-8">
+  <p class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">Barbershop</p>
+  <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-800 mb-4"><%= config.namaToko %></h1>
+  <p class="text-gray-500 max-w-lg leading-relaxed mb-8">Pantau antrean sebelum datang atau pesan jadwal potong lebih dulu, sehingga waktumu tidak terbuang menunggu.</p>
+  <div class="flex flex-wrap gap-3">
+    <a href="/antrean" class="bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Lihat antrean</a>
+    <a href="/reservasi" class="border border-gray-300 hover:bg-white text-gray-700 text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Buat reservasi</a>
+  </div>
+</section>
+
+<section class="grid grid-cols-2 gap-4 mb-14">
+  <div class="rounded-xl border border-gray-200 p-6">
+    <p class="text-sm text-gray-400">Antrean saat ini</p>
+    <p class="mt-2 text-3xl font-bold text-gray-800"><%= jumlahAntrean %> <span class="text-base font-normal text-gray-400">orang</span></p>
+  </div>
+  <div class="rounded-xl border border-gray-200 p-6">
+    <p class="text-sm text-gray-400">Perkiraan waktu tunggu</p>
+    <p class="mt-2 text-3xl font-bold text-gray-800"><%= estimasi %> <span class="text-base font-normal text-gray-400">menit</span></p>
+  </div>
+</section>
+
+<section>
+  <div class="mb-6">
+    <h2 class="text-xl font-bold text-gray-800">Layanan dan produk</h2>
+    <p class="text-sm text-gray-400 mt-1">Daftar harga terbaru.</p>
+  </div>
+  <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <% produk.forEach((p) => { %>
+      <article class="rounded-xl border border-gray-200 p-6 hover:border-gray-300 hover:shadow-sm transition">
+        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400"><%= p.kategori %></p>
+        <h3 class="mt-3 font-semibold text-gray-800"><%= p.nama %></h3>
+        <p class="mt-1 text-sm text-gray-500 leading-relaxed"><%= p.deskripsi %></p>
+        <p class="mt-5 text-lg font-bold text-gray-700"><%= fmt.rupiah(p.harga) %></p>
+      </article>
+    <% }) %>
+  </div>
+</section>
+
+<%- include('partials/foot') %>
