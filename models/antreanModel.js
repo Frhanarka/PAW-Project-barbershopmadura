@@ -1,46 +1,72 @@
+
 const { menitPerAntrean } = require('../config');
-const produkModel = require('./produkModel');
 
 const daftar = [];
 let urut = 0;
 
+// Menambahkan antrean
 const tambah = ({ nama, produk }) => {
-  urut += 1;
-  const item = {
-    id: urut,
-    nomor: 'A' + String(urut).padStart(3, '0'),
-    nama,
-    produk,
-    status: 'menunggu', // menunggu | dilayani | selesai
-    waktuDaftar: new Date()
-  };
-  daftar.push(item);
-  return item;
+    urut += 1;
+
+    const item = {
+        id: urut,
+        nomor: 'A' + String(urut).padStart(3, '0'),
+        nama,
+        produk,
+        status: 'menunggu',
+        waktuDaftar: new Date()
+    };
+
+    daftar.push(item);
+    return item;
 };
 
-const getAktif = () => daftar.filter((i) => i.status !== 'selesai');
-const getById = (id) => daftar.find((i) => i.id === Number(id));
+// Mengambil antrean yang belum selesai
+const getAktif = () => {
+    return daftar.filter(item => item.status !== 'selesai');
+};
 
+// Mengambil antrean berdasarkan ID
+const getById = (id) => {
+    return daftar.find(item => item.id === Number(id));
+};
+
+// Mengubah status antrean
 const ubahStatus = (id, status) => {
-  const item = getById(id);
-  if (!item) return null;
-  item.status = status;
-  return item;
+    const item = getById(id);
+
+    if (!item) return null;
+
+    item.status = status;
+    return item;
 };
 
+// Menghapus antrean
 const hapus = (id) => {
-  const idx = daftar.findIndex((i) => i.id === Number(id));
-  if (idx === -1) return false;
-  daftar.splice(idx, 1);
-  return true;
+    const index = daftar.findIndex(item => item.id === Number(id));
+
+    if (index === -1) return false;
+
+    daftar.splice(index, 1);
+    return true;
 };
 
-const jumlahMenunggu = () => daftar.filter((i) => i.status === 'menunggu').length;
-const estimasiMenit = () => getAktif().length * menitPerAntrean;
+// Menghitung antrean yang menunggu
+const jumlahMenunggu = () => {
+    return daftar.filter(item => item.status === 'menunggu').length;
+};
 
-// Data awal agar halaman tidak kosong saat pertama dijalankan
-tambah({ nama: 'Rizky', produk: produkModel.getById(1) });
-tambah({ nama: 'Dimas', produk: produkModel.getById(3) });
-ubahStatus(1, 'dilayani');
+// Menghitung estimasi waktu antrean
+const estimasiMenit = () => {
+    return getAktif().length * menitPerAntrean;
+};
 
-module.exports = { tambah, getAktif, getById, ubahStatus, hapus, jumlahMenunggu, estimasiMenit };
+module.exports = {
+    tambah,
+    getAktif,
+    getById,
+    ubahStatus,
+    hapus,
+    jumlahMenunggu,
+    estimasiMenit
+};
