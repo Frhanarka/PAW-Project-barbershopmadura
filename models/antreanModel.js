@@ -1,72 +1,42 @@
-
+const { DataTypes, Op } = require('sequelize');
+const sequelize = require('../config/database');
 const { menitPerAntrean } = require('../config');
 
-const daftar = [];
-let urut = 0;
+const Antrean = sequelize.define('Antrean', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    nomor: {
+        type: DataTypes.VIRTUAL,
+        get() { return 'A' + String(this.id).padStart(3, '0'); }
+    },
+    nama: { type: DataTypes.STRING(100), allowNull: false },
+    produk: { type: DataTypes.STRING(100), allowNull: true },
+    harga: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    status: { type: DataTypes.STRING(20), defaultValue: 'menunggu' },
+    waktuDaftar: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
+}, { tableName: 'antrean', timestamps: false });
 
-// Menambahkan antrean
-const tambah = ({ nama, produk }) => {
-    urut += 1;
+const tambah = async ({ nama, produk }) =>
+    Antrean.create({ nama, produk: produk.nama, harga: produk.harga });
 
-    const item = {
-        id: urut,
-        nomor: 'A' + String(urut).padStart(3, '0'),
-        nama,
-        produk,
-        status: 'menunggu',
-        waktuDaftar: new Date()
-    };
+const getAktif = async () =>
+    Antrean.findAll({
+        where: { status: { [Op.ne]: 'selesai' } },
+        order: [['id', 'ASC']]
+    });
 
-    daftar.push(item);
-    return item;
-};
+const getById = async (id) => Antrean.findByPk(Number(id));
 
-// Mengambil antrean yang belum selesai
-const getAktif = () => {
-    return daftar.filter(item => item.status !== 'selesai');
-};
-
-// Mengambil antrean berdasarkan ID
-const getById = (id) => {
-    return daftar.find(item => item.id === Number(id));
-};
-
-// Mengubah status antrean
-const ubahStatus = (id, status) => {
-    const item = getById(id);
-
+const ubahStatus = async (id, status) => {
+    const item = await getById(id);
     if (!item) return null;
-
     item.status = status;
-    return item;
+    return item.save();
 };
 
-// Menghapus antrean
-const hapus = (id) => {
-    const index = daftar.findIndex(item => item.id === Number(id));
+const hapus = async (id) => (await Antrean.destroy({ where: { id: Number(id) } })) > 0;
 
-    if (index === -1) return false;
+const jumlahMenunggu = async () => Antrean.count({ where: { status: 'menunggu' } });
 
-    daftar.splice(index, 1);
-    return true;
-};
+const estimasiMenit = async () => (await getAktif()).length * menitPerAntrean;
 
-// Menghitung antrean yang menunggu
-const jumlahMenunggu = () => {
-    return daftar.filter(item => item.status === 'menunggu').length;
-};
-
-// Menghitung estimasi waktu antrean
-const estimasiMenit = () => {
-    return getAktif().length * menitPerAntrean;
-};
-
-module.exports = {
-    tambah,
-    getAktif,
-    getById,
-    ubahStatus,
-    hapus,
-    jumlahMenunggu,
-    estimasiMenit
-};
+module.exports = { Antrean, tambah, getAktif, getById, ubahStatus, hapus, jumlahMenunggu, estimasiMenit };

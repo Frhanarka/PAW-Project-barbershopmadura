@@ -16,7 +16,7 @@
         <div class="w-14 h-14 shrink-0 rounded-lg bg-gray-100 border border-gray-200 text-gray-700 font-bold flex items-center justify-center"><%= a.nomor %></div>
         <div class="flex-1 min-w-0">
           <p class="font-semibold text-gray-800 truncate"><%= a.nama %></p>
-          <p class="text-sm text-gray-400 truncate"><%= a.produk.nama %> · daftar <%= fmt.jam(a.waktuDaftar) %></p>
+          <p class="text-sm text-gray-400 truncate"><%= a.produk %> · daftar <%= fmt.jam(a.waktuDaftar) %></p>
         </div>
         <% if (a.status === 'menunggu') { %>
           <span class="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">Menunggu</span>

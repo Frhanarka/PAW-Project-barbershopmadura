@@ -1,35 +1,21 @@
-const catatan = [];
-let urut = 0;
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-const catat = ({ nama, produk }) => {
-    urut += 1;
+const Penjualan = sequelize.define('Penjualan', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    nama: { type: DataTypes.STRING(100), allowNull: false },
+    produk: { type: DataTypes.STRING(100), allowNull: false },
+    harga: { type: DataTypes.INTEGER, allowNull: false },
+    waktu: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
+}, { tableName: 'penjualan', timestamps: false });
 
-    const item = {
-        id: urut,
-        nama,
-        produk: produk.nama,
-        harga: produk.harga,
-        waktu: new Date()
-    };
+const catat = async ({ nama, produk }) =>
+    Penjualan.create({ nama, produk: produk.nama, harga: produk.harga });
 
-    catatan.unshift(item);
-    return item;
-};
+const hapus = async (id) => (await Penjualan.destroy({ where: { id: Number(id) } })) > 0;
 
-const hapus = (id) => {
-    const idx = catatan.findIndex(c => c.id === Number(id));
+const getAll = async () => Penjualan.findAll({ order: [['waktu', 'DESC']] });
 
-    if (idx === -1) return false;
+const total = async () => (await Penjualan.sum('harga')) || 0;
 
-    catatan.splice(idx, 1);
-    return true;
-};
-
-const getAll = () => catatan;
-
-const total = () => catatan.reduce(
-    (jumlah, c) => jumlah + c.harga,
-    0
-);
-
-module.exports = { catat, hapus, getAll, total };
+module.exports = { Penjualan, catat, hapus, getAll, total };

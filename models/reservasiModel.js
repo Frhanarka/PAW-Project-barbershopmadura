@@ -1,34 +1,38 @@
+const { DataTypes, Op } = require('sequelize');
+const sequelize = require('../config/database');
 const { jamBuka, jamTutup } = require('../config');
 const { tanggalISO } = require('../utils/format');
 
-const daftar = [];
-let urut = 0;
+const Reservasi = sequelize.define('Reservasi', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    nama: { type: DataTypes.STRING(100), allowNull: false },
+    tanggal: { type: DataTypes.DATEONLY, allowNull: false },
+    jam: { type: DataTypes.STRING(5), allowNull: false },
+    produk: { type: DataTypes.STRING(100), allowNull: true }
+}, { tableName: 'reservasi', timestamps: false });
 
-// Slot per jam: 09:00 sampai 20:00
+// Slot per jam: jamBuka sampai jamTutup
 const slotJam = [];
 for (let j = jamBuka; j < jamTutup; j++) slotJam.push(String(j).padStart(2, '0') + ':00');
 
-const sudahDipesan = (tanggal, jam) => daftar.some((r) => r.tanggal === tanggal && r.jam === jam);
-const slotTerpakai = (tanggal) => daftar.filter((r) => r.tanggal === tanggal).map((r) => r.jam);
+const sudahDipesan = async (tanggal, jam) =>
+    (await Reservasi.count({ where: { tanggal, jam } })) > 0;
 
-const tambah = ({ nama, tanggal, jam, produk }) => {
-  urut += 1;
-  const item = { id: urut, nama, tanggal, jam, produk: produk.nama };
-  daftar.push(item);
-  return item;
-};
+const slotTerpakai = async (tanggal) =>
+    (await Reservasi.findAll({ where: { tanggal } })).map((r) => r.jam);
 
-const hapus = (id) => {
-  const idx = daftar.findIndex((r) => r.id === Number(id));
-  if (idx === -1) return false;
-  daftar.splice(idx, 1);
-  return true;
-};
+const tambah = async ({ nama, tanggal, jam, produk }) =>
+    Reservasi.create({ nama, tanggal, jam, produk: produk.nama });
+
+const getById = async (id) => Reservasi.findByPk(Number(id));
+
+const hapus = async (id) => (await Reservasi.destroy({ where: { id: Number(id) } })) > 0;
 
 // Hanya reservasi hari ini dan seterusnya, urut waktu
-const getMendatang = () =>
-  daftar
-    .filter((r) => r.tanggal >= tanggalISO())
-    .sort((a, b) => (a.tanggal + a.jam).localeCompare(b.tanggal + b.jam));
+const getMendatang = async () =>
+    Reservasi.findAll({
+        where: { tanggal: { [Op.gte]: tanggalISO() } },
+        order: [['tanggal', 'ASC'], ['jam', 'ASC']]
+    });
 
-module.exports = { slotJam, sudahDipesan, slotTerpakai, tambah, hapus, getMendatang };
+module.exports = { Reservasi, slotJam, sudahDipesan, slotTerpakai, tambah, getById, hapus, getMendatang };

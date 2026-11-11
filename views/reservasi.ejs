@@ -59,6 +59,11 @@
             <p class="font-semibold text-gray-800 truncate"><%= r.nama %></p>
             <p class="text-sm text-gray-400 truncate"><%= r.produk %></p>
           </div>
+          <% if (r.tanggal === hariIni) { %>
+            <form method="POST" action="/reservasi/<%= r.id %>/checkin">
+              <button class="text-sm font-semibold text-gray-800 border border-gray-300 hover:bg-gray-50 rounded-lg px-3 py-1.5 transition-colors" title="Masukkan ke antrean">Check-in</button>
+            </form>
+          <% } %>
           <form method="POST" action="/reservasi/<%= r.id %>/hapus" onsubmit="return confirm('Hapus reservasi ini?');">
             <button class="text-sm text-gray-400 hover:text-gray-800 px-2 py-1.5 transition-colors" title="Hapus">Hapus</button>
           </form>

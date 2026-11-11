@@ -1,4 +1,3 @@
-
 const config = require('../config');
 const produkModel = require('../models/produkModel');
 const antreanModel = require('../models/antreanModel');
@@ -15,6 +14,11 @@ const flash = (req) =>
         ? { teks: req.query.pesan, tipe: req.query.tipe || 'sukses' }
         : null;
 
+// Express 4 tidak menangkap error dari fungsi async,
+// jadi dibungkus supaya error diteruskan ke error handler
+const aman = (fn) => (req, res, next) =>
+    Promise.resolve(fn(req, res, next)).catch(next);
+
 // GET /
 const beranda = async (req, res) => {
     const produk = await produkModel.getAll();
@@ -25,8 +29,8 @@ const beranda = async (req, res) => {
         pesan: flash(req),
         config,
         produk,
-        jumlahAntrean: antreanModel.getAktif().length,
-        estimasi: antreanModel.estimasiMenit()
+        jumlahAntrean: (await antreanModel.getAktif()).length,
+        estimasi: await antreanModel.estimasiMenit()
     });
 };
 
@@ -39,8 +43,8 @@ const antrean = async (req, res) => {
         aktif: 'antrean',
         pesan: flash(req),
         produk,
-        antrean: antreanModel.getAktif(),
-        estimasi: antreanModel.estimasiMenit()
+        antrean: await antreanModel.getAktif(),
+        estimasi: await antreanModel.estimasiMenit()
     });
 };
 
@@ -53,26 +57,26 @@ const ambilAntrean = async (req, res) => {
         return kembali(res, '/antrean', 'Nama dan layanan wajib diisi.', 'galat');
     }
 
-    const item = antreanModel.tambah({ nama, produk });
+    const item = await antreanModel.tambah({ nama, produk });
 
     kembali(res, '/antrean', `Nomor antrean ${item.nomor} untuk ${item.nama} berhasil dibuat.`);
 };
 
 // POST /antrean/:id/status
-const ubahStatusAntrean = (req, res) => {
-    const item = antreanModel.getById(req.params.id);
+const ubahStatusAntrean = async (req, res) => {
+    const item = await antreanModel.getById(req.params.id);
     const status = req.body.status;
 
     if (!item || !['dilayani', 'selesai'].includes(status)) {
         return kembali(res, '/antrean', 'Data antrean tidak valid.', 'galat');
     }
 
-    antreanModel.ubahStatus(item.id, status);
+    await antreanModel.ubahStatus(item.id, status);
 
     if (status === 'selesai') {
-        penjualanModel.catat({
+        await penjualanModel.catat({
             nama: item.nama,
-            produk: item.produk
+            produk: { nama: item.produk, harga: item.harga }
         });
 
         return kembali(res, '/antrean', `${item.nomor} selesai dan tercatat di penjualan.`);
@@ -82,8 +86,8 @@ const ubahStatusAntrean = (req, res) => {
 };
 
 // POST /antrean/:id/hapus
-const hapusAntrean = (req, res) => {
-    if (!antreanModel.hapus(req.params.id)) {
+const hapusAntrean = async (req, res) => {
+    if (!(await antreanModel.hapus(req.params.id))) {
         return kembali(res, '/antrean', 'Data antrean tidak ditemukan.', 'galat');
     }
 
@@ -91,22 +95,22 @@ const hapusAntrean = (req, res) => {
 };
 
 // GET /penjualan
-const penjualan = (req, res) => {
-    const data = penjualanModel.getAll();
+const penjualan = async (req, res) => {
+    const data = await penjualanModel.getAll();
 
     res.render('penjualan', {
         judul: 'Penjualan',
         aktif: 'penjualan',
         pesan: flash(req),
         data,
-        total: penjualanModel.total(),
+        total: await penjualanModel.total(),
         jumlah: data.length
     });
 };
 
 // POST /penjualan/:id/hapus
-const hapusPenjualan = (req, res) => {
-    if (!penjualanModel.hapus(req.params.id)) {
+const hapusPenjualan = async (req, res) => {
+    if (!(await penjualanModel.hapus(req.params.id))) {
         return kembali(res, '/penjualan', 'Data penjualan tidak ditemukan.', 'galat');
     }
 
@@ -127,10 +131,10 @@ const reservasi = async (req, res) => {
         pesan: flash(req),
         produk,
         slotJam: reservasiModel.slotJam,
-        terpakai: reservasiModel.slotTerpakai(tanggal),
+        terpakai: await reservasiModel.slotTerpakai(tanggal),
         tanggal,
         hariIni: tanggalISO(),
-        daftar: reservasiModel.getMendatang()
+        daftar: await reservasiModel.getMendatang()
     });
 };
 
@@ -152,18 +156,42 @@ const buatReservasi = async (req, res) => {
         return kembali(res, '/reservasi', 'Jam di luar jam operasional.', 'galat');
     }
 
-    if (reservasiModel.sudahDipesan(tanggal, jam)) {
+    if (await reservasiModel.sudahDipesan(tanggal, jam)) {
         return kembali(res, '/reservasi', `Jam ${jam} pada tanggal tersebut sudah dipesan.`, 'galat');
     }
 
-    reservasiModel.tambah({ nama, tanggal, jam, produk });
+    await reservasiModel.tambah({ nama, tanggal, jam, produk });
 
     kembali(res, '/reservasi', `Reservasi ${nama} pukul ${jam} berhasil dibuat.`);
 };
 
+// POST /reservasi/:id/checkin
+const checkinReservasi = async (req, res) => {
+    const r = await reservasiModel.getById(req.params.id);
+
+    if (!r) {
+        return kembali(res, '/reservasi', 'Data reservasi tidak ditemukan.', 'galat');
+    }
+
+    if (r.tanggal !== tanggalISO()) {
+        return kembali(res, '/reservasi', 'Check-in hanya bisa pada hari reservasi.', 'galat');
+    }
+
+    const produk = await produkModel.getByNama(r.produk);
+
+    if (!produk) {
+        return kembali(res, '/reservasi', 'Layanan pada reservasi ini sudah tidak tersedia.', 'galat');
+    }
+
+    const item = await antreanModel.tambah({ nama: r.nama, produk });
+    await reservasiModel.hapus(r.id);
+
+    kembali(res, '/antrean', `${r.nama} check-in dengan nomor antrean ${item.nomor}.`);
+};
+
 // POST /reservasi/:id/hapus
-const hapusReservasi = (req, res) => {
-    if (!reservasiModel.hapus(req.params.id)) {
+const hapusReservasi = async (req, res) => {
+    if (!(await reservasiModel.hapus(req.params.id))) {
         return kembali(res, '/reservasi', 'Data reservasi tidak ditemukan.', 'galat');
     }
 
@@ -171,14 +199,15 @@ const hapusReservasi = (req, res) => {
 };
 
 module.exports = {
-    beranda,
-    antrean,
-    ambilAntrean,
-    ubahStatusAntrean,
-    hapusAntrean,
-    penjualan,
-    hapusPenjualan,
-    reservasi,
-    buatReservasi,
-    hapusReservasi
+    beranda: aman(beranda),
+    antrean: aman(antrean),
+    ambilAntrean: aman(ambilAntrean),
+    ubahStatusAntrean: aman(ubahStatusAntrean),
+    hapusAntrean: aman(hapusAntrean),
+    penjualan: aman(penjualan),
+    hapusPenjualan: aman(hapusPenjualan),
+    reservasi: aman(reservasi),
+    buatReservasi: aman(buatReservasi),
+    checkinReservasi: aman(checkinReservasi),
+    hapusReservasi: aman(hapusReservasi)
 };

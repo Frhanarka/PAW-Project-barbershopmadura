@@ -1,4 +1,3 @@
-
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
@@ -41,8 +40,14 @@ const getById = async (id) => {
     return await Produk.findByPk(Number(id));
 };
 
+// Mengambil satu produk berdasarkan nama (dipakai saat check-in reservasi)
+const getByNama = async (nama) => {
+    return await Produk.findOne({ where: { nama } });
+};
+
 module.exports = {
     Produk,
     getAll,
-    getById
+    getById,
+    getByNama
 };
