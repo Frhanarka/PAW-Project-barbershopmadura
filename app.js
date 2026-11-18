@@ -15,6 +15,8 @@ const { Produk } = require('./models/produkModel');
 require('./models/antreanModel');
 require('./models/penjualanModel');
 require('./models/reservasiModel');
+require('./models/ratingModel');
+const modelRambut = require('./models/modelrambutModel');
 
 const app = express();
 
@@ -28,6 +30,7 @@ app.locals.namaToko = config.namaToko;
 
 // Middleware
 app.use(logger);
+app.use(express.static(path.join(__dirname, 'public'))); // untuk foto model rambut di public/img
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
@@ -67,10 +70,14 @@ async function startServer() {
     await sequelize.sync();
     console.log('Struktur tabel berhasil disiapkan!');
 
-    // 3. Memasukkan data awal jika tabel produk masih kosong
+    // 3. Memasukkan data awal jika tabel masih kosong
     if ((await Produk.count()) === 0) {
       await Produk.bulkCreate(produkAwal);
       console.log('Data awal produk berhasil dimasukkan!');
+    }
+
+    if (await modelRambut.isiDataAwal()) {
+      console.log('Data awal model rambut berhasil dimasukkan!');
     }
 
     // 4. Menjalankan server setelah database siap
