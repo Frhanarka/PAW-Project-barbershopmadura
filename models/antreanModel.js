@@ -26,6 +26,10 @@ const getAktif = async () =>
 
 const getById = async (id) => Antrean.findByPk(Number(id));
 
+// Antrean yang sedang dilayani saat ini (null kalau tidak ada)
+const getSedangDilayani = async () =>
+    Antrean.findOne({ where: { status: 'dilayani' } });
+
 const ubahStatus = async (id, status) => {
     const item = await getById(id);
     if (!item) return null;
@@ -39,4 +43,14 @@ const jumlahMenunggu = async () => Antrean.count({ where: { status: 'menunggu' }
 
 const estimasiMenit = async () => (await getAktif()).length * menitPerAntrean;
 
-module.exports = { Antrean, tambah, getAktif, getById, ubahStatus, hapus, jumlahMenunggu, estimasiMenit };
+module.exports = {
+    Antrean,
+    tambah,
+    getAktif,
+    getById,
+    getSedangDilayani,
+    ubahStatus,
+    hapus,
+    jumlahMenunggu,
+    estimasiMenit
+};
