@@ -1,0 +1,32 @@
+<section class="mt-12">
+  <div class="flex flex-wrap items-end justify-between gap-3 mb-5">
+    <div>
+      <h2 class="text-xl font-bold tracking-tight text-gray-800">Rekomendasi model rambut</h2>
+      <p class="text-sm text-gray-400 mt-1">Cari model yang cocok dengan bentuk wajahmu.</p>
+    </div>
+    <a href="/model" class="text-sm font-semibold text-gray-800 hover:underline">Lihat semua model</a>
+  </div>
+
+  <div class="flex flex-wrap gap-2 mb-6">
+    <% bentukWajah.forEach((b) => { %>
+      <a href="/model?wajah=<%= b %>" class="rounded-full border border-gray-300 px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">Wajah <%= b %></a>
+    <% }) %>
+  </div>
+
+  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    <% rekomendasiModel.forEach((m) => { %>
+      <a href="/model" class="rounded-xl border border-gray-200 overflow-hidden hover:border-gray-400 transition-colors block">
+        <% if (m.gambar) { %>
+          <img src="<%= m.gambar %>" alt="<%= m.nama %>" class="h-32 w-full object-cover">
+        <% } else { %>
+          <div class="h-32 w-full bg-gray-100 flex items-center justify-center text-4xl font-bold text-gray-300"><%= m.nama.charAt(0) %></div>
+        <% } %>
+        <div class="p-4">
+          <h3 class="font-bold text-gray-800"><%= m.nama %></h3>
+          <p class="mt-1 text-xs text-gray-400">Cocok: <%= m.cocokWajah.split(',').join(', ') %></p>
+          <p class="mt-2 text-sm text-gray-500 line-clamp-2"><%= m.deskripsi %></p>
+        </div>
+      </a>
+    <% }) %>
+  </div>
+</section>

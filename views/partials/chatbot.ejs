@@ -1,0 +1,76 @@
+<button id="chat-buka" class="fixed bottom-5 right-5 z-50 bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold rounded-full px-5 py-3 shadow-lg transition-colors">Tanya Asisten</button>
+
+<div id="chat-panel" class="hidden fixed bottom-20 right-5 z-50 w-80 max-w-[calc(100vw-2.5rem)] rounded-xl border border-gray-200 bg-white shadow-xl flex-col overflow-hidden">
+  <div class="flex items-center justify-between bg-gray-800 text-white px-4 py-3">
+    <span class="text-sm font-semibold">Asisten <%= namaToko %></span>
+    <button id="chat-tutup" class="text-gray-300 hover:text-white text-lg leading-none" aria-label="Tutup">&times;</button>
+  </div>
+  <div id="chat-isi" class="h-72 overflow-y-auto p-3 space-y-2 text-sm"></div>
+  <form id="chat-form" class="flex gap-2 border-t border-gray-100 p-3">
+    <input id="chat-input" maxlength="500" autocomplete="off" placeholder="Tulis pertanyaan..." class="flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-500">
+    <button class="bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold px-3 rounded-lg transition-colors">Kirim</button>
+  </form>
+</div>
+
+<script>
+  (function () {
+    var panel = document.getElementById('chat-panel');
+    var isi = document.getElementById('chat-isi');
+    var form = document.getElementById('chat-form');
+    var input = document.getElementById('chat-input');
+    var riwayat = [];
+    var sibuk = false;
+
+    function tampil(teks, peran) {
+      var el = document.createElement('div');
+      el.className = peran === 'user'
+        ? 'ml-8 rounded-lg bg-gray-800 text-white px-3 py-2'
+        : 'mr-8 rounded-lg bg-gray-100 text-gray-800 px-3 py-2';
+      el.textContent = teks;
+      isi.appendChild(el);
+      isi.scrollTop = isi.scrollHeight;
+      return el;
+    }
+
+    function buka() {
+      panel.classList.toggle('hidden');
+      panel.classList.toggle('flex');
+      if (isi.children.length === 0) tampil('Halo! Ada yang bisa saya bantu soal layanan, harga, atau antrean?', 'model');
+      input.focus();
+    }
+
+    document.getElementById('chat-buka').addEventListener('click', buka);
+    document.getElementById('chat-tutup').addEventListener('click', buka);
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var pesan = input.value.trim();
+      if (!pesan || sibuk) return;
+
+      sibuk = true;
+      input.value = '';
+      tampil(pesan, 'user');
+      var menunggu = tampil('Mengetik...', 'model');
+
+      try {
+        var res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pesan: pesan, riwayat: riwayat })
+        });
+        var data = await res.json();
+        var jawaban = data.jawaban || data.galat || 'Terjadi kesalahan.';
+        menunggu.textContent = jawaban;
+        if (data.jawaban) {
+          riwayat.push({ role: 'user', teks: pesan }, { role: 'model', teks: jawaban });
+          riwayat = riwayat.slice(-10);
+        }
+      } catch (err) {
+        menunggu.textContent = 'Tidak bisa terhubung ke server.';
+      }
+
+      sibuk = false;
+      isi.scrollTop = isi.scrollHeight;
+    });
+  })();
+</script>

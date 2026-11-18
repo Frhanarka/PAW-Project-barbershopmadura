@@ -1,0 +1,76 @@
+<%- include('partials/head') %>
+
+<div class="mb-8">
+  <h1 class="text-2xl font-bold tracking-tight text-gray-800">Rating</h1>
+  <p class="text-sm text-gray-400 mt-1">Ceritakan pengalamanmu setelah layanan selesai.</p>
+</div>
+
+<div class="grid md:grid-cols-3 gap-8 items-start">
+  <section class="rounded-xl border border-gray-200 p-6">
+    <% if (belum.length === 0) { %>
+      <p class="text-sm text-gray-400">Belum ada layanan selesai yang bisa dirating.</p>
+    <% } else { %>
+      <form method="POST" action="/rating" class="space-y-4">
+        <div>
+          <label class="block text-sm text-gray-500 mb-1.5" for="penjualanId">Layanan</label>
+          <select id="penjualanId" name="penjualanId" required class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-500">
+            <% belum.forEach((b) => { %>
+              <option value="<%= b.id %>"><%= b.nama %> – <%= b.produk %> (<%= new Date(b.waktu).toLocaleDateString('id-ID') %>)</option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div>
+          <span class="block text-sm text-gray-500 mb-1.5">Bintang</span>
+          <div class="flex flex-row-reverse justify-end gap-1">
+            <% [5, 4, 3, 2, 1].forEach((n) => { %>
+              <input type="radio" id="bintang<%= n %>" name="bintang" value="<%= n %>" class="peer sr-only" required>
+              <label for="bintang<%= n %>" title="<%= n %> bintang" class="cursor-pointer text-3xl leading-none text-gray-300 peer-checked:text-amber-400">★</label>
+            <% }) %>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm text-gray-500 mb-1.5" for="komentar">Komentar (opsional)</label>
+          <textarea id="komentar" name="komentar" rows="3" maxlength="300" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-500"></textarea>
+        </div>
+
+        <button class="w-full bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors">Kirim rating</button>
+      </form>
+    <% } %>
+  </section>
+
+  <section class="md:col-span-2">
+    <div class="rounded-xl border border-gray-200 p-5 mb-6 flex items-center gap-5">
+      <p class="text-4xl font-bold text-gray-800"><%= jumlah ? rata.toFixed(1) : '-' %></p>
+      <div>
+        <p class="text-xl text-amber-400"><%= '★'.repeat(Math.round(rata)) %><span class="text-gray-300"><%= '★'.repeat(5 - Math.round(rata)) %></span></p>
+        <p class="text-sm text-gray-400"><%= jumlah %> ulasan</p>
+      </div>
+    </div>
+
+    <h2 class="font-bold text-gray-800 mb-4">Ulasan pelanggan</h2>
+    <% if (data.length === 0) { %>
+      <div class="rounded-xl border border-dashed border-gray-300 p-10 text-center text-sm text-gray-400">Belum ada ulasan.</div>
+    <% } %>
+    <div class="space-y-3">
+      <% data.forEach((r) => { %>
+        <div class="rounded-xl border border-gray-200 p-4 flex items-start gap-4">
+          <div class="min-w-0 flex-1">
+            <p class="font-semibold text-gray-800 truncate"><%= r.nama %></p>
+            <p class="text-xs text-gray-400"><%= r.produk %> · <%= new Date(r.waktu).toLocaleDateString('id-ID') %></p>
+            <p class="mt-1 text-lg leading-none text-amber-400"><%= '★'.repeat(r.bintang) %><span class="text-gray-300"><%= '★'.repeat(5 - r.bintang) %></span></p>
+            <% if (r.komentar) { %>
+              <p class="mt-2 text-sm text-gray-600"><%= r.komentar %></p>
+            <% } %>
+          </div>
+          <form method="POST" action="/rating/<%= r.id %>/hapus" onsubmit="return confirm('Hapus rating ini?');">
+            <button class="text-sm text-gray-400 hover:text-gray-800 px-2 py-1.5 transition-colors" title="Hapus">Hapus</button>
+          </form>
+        </div>
+      <% }) %>
+    </div>
+  </section>
+</div>
+
+<%- include('partials/foot') %>

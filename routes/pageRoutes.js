@@ -1,5 +1,7 @@
 const express = require('express');
 const page = require('../controllers/pageController');
+const rate = require('../controllers/ratingController');
+const model = require('../controllers/modelcontroller');
 
 const router = express.Router();
 
@@ -17,5 +19,11 @@ router.get('/reservasi', page.reservasi);
 router.post('/reservasi', page.buatReservasi);
 router.post('/reservasi/:id/checkin', page.checkinReservasi);
 router.post('/reservasi/:id/hapus', page.hapusReservasi);
+
+router.get('/rating', rate.rating);
+router.post('/rating', rate.beriRating);
+router.post('/rating/:id/hapus', rate.hapusRating);
+
+router.get('/model', model.daftar);
 
 module.exports = router;

@@ -1,0 +1,49 @@
+<%- include('partials/head') %>
+
+<div class="mb-8">
+  <h1 class="text-2xl font-bold tracking-tight text-gray-800">Model Rambut</h1>
+  <p class="text-sm text-gray-400 mt-1">Pilih bentuk wajahmu untuk melihat rekomendasi model yang cocok. Ini panduan umum, barber bisa menyesuaikan dengan rambutmu.</p>
+</div>
+
+<form method="GET" action="/model" class="mb-8 flex flex-wrap items-end gap-3">
+  <div>
+    <label class="block text-sm text-gray-500 mb-1.5" for="wajah">Bentuk wajah</label>
+    <select id="wajah" name="wajah" class="border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-500">
+      <option value="">Semua</option>
+      <% bentukWajah.forEach((b) => { %>
+        <option value="<%= b %>" <%= wajah === b ? 'selected' : '' %>><%= b %></option>
+      <% }) %>
+    </select>
+  </div>
+  <button class="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 transition-colors">Tampilkan</button>
+  <% if (wajah) { %>
+    <a href="/model" class="text-sm text-gray-400 hover:text-gray-800 py-2">Reset</a>
+  <% } %>
+</form>
+
+<% if (data.length === 0) { %>
+  <div class="rounded-xl border border-dashed border-gray-300 p-10 text-center text-sm text-gray-400">Belum ada model untuk bentuk wajah ini.</div>
+<% } %>
+
+<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+  <% data.forEach((m) => { %>
+    <article class="rounded-xl border border-gray-200 overflow-hidden flex flex-col">
+      <% if (m.gambar) { %>
+        <img src="<%= m.gambar %>" alt="<%= m.nama %>" class="h-44 w-full object-cover">
+      <% } else { %>
+        <div class="h-44 w-full bg-gray-100 flex items-center justify-center text-5xl font-bold text-gray-300"><%= m.nama.charAt(0) %></div>
+      <% } %>
+      <div class="p-5 flex-1 flex flex-col">
+        <div class="flex items-start justify-between gap-3">
+          <h2 class="font-bold text-gray-800"><%= m.nama %></h2>
+          <span class="shrink-0 text-xs rounded-full border border-gray-200 px-2.5 py-1 text-gray-500">Perawatan <%= m.perawatan.toLowerCase() %></span>
+        </div>
+        <p class="mt-2 text-sm text-gray-500 flex-1"><%= m.deskripsi %></p>
+        <p class="mt-3 text-xs text-gray-400">Cocok untuk wajah: <span class="text-gray-700 font-medium"><%= m.cocokWajah.split(',').join(', ') %></span></p>
+        <a href="/antrean" class="mt-4 inline-block text-center bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold py-2 rounded-lg transition-colors">Ambil antrean</a>
+      </div>
+    </article>
+  <% }) %>
+</div>
+
+<%- include('partials/foot') %>
