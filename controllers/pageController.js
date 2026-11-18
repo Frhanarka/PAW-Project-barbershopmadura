@@ -3,6 +3,7 @@ const produkModel = require('../models/produkModel');
 const antreanModel = require('../models/antreanModel');
 const penjualanModel = require('../models/penjualanModel');
 const reservasiModel = require('../models/reservasiModel');
+const modelRambutModel = require('../models/modelrambutModel');
 const { tanggalISO } = require('../utils/format');
 
 const kembali = (res, path, pesan, tipe = 'sukses') =>
@@ -30,20 +31,25 @@ const beranda = async (req, res) => {
         config,
         produk,
         jumlahAntrean: (await antreanModel.getAktif()).length,
-        estimasi: await antreanModel.estimasiMenit()
+        estimasi: await antreanModel.estimasiMenit(),
+        rekomendasiModel: await modelRambutModel.getAcak(4),
+        bentukWajah: modelRambutModel.BENTUK_WAJAH
     });
 };
 
 // GET /antrean
 const antrean = async (req, res) => {
     const produk = await produkModel.getAll();
+    const aktif = await antreanModel.getAktif();
 
     res.render('antrean', {
         judul: 'Antrean',
         aktif: 'antrean',
         pesan: flash(req),
         produk,
-        antrean: await antreanModel.getAktif(),
+        antrean: aktif,
+        // Antrean yang sedang dilayani (null kalau tidak ada), bisa dipakai di view
+        sedangDilayani: aktif.find((a) => a.status === 'dilayani') || null,
         estimasi: await antreanModel.estimasiMenit()
     });
 };
@@ -69,6 +75,33 @@ const ubahStatusAntrean = async (req, res) => {
 
     if (!item || !['dilayani', 'selesai'].includes(status)) {
         return kembali(res, '/antrean', 'Data antrean tidak valid.', 'galat');
+    }
+
+    if (item.status === 'selesai') {
+        return kembali(res, '/antrean', `${item.nomor} sudah selesai.`, 'galat');
+    }
+
+    // Mulai melayani: tolak kalau masih ada pelanggan lain yang dilayani
+    if (status === 'dilayani') {
+        if (item.status === 'dilayani') {
+            return kembali(res, '/antrean', `${item.nomor} sudah sedang dilayani.`, 'galat');
+        }
+
+        const sedang = await antreanModel.getSedangDilayani();
+
+        if (sedang) {
+            return kembali(
+                res,
+                '/antrean',
+                `Belum bisa dimulai. ${sedang.nomor} (${sedang.nama}) masih dilayani, selesaikan dulu.`,
+                'galat'
+            );
+        }
+    }
+
+    // Menyelesaikan: hanya boleh kalau antrean itu memang sedang dilayani
+    if (status === 'selesai' && item.status !== 'dilayani') {
+        return kembali(res, '/antrean', `${item.nomor} belum dilayani, mulai layani dulu sebelum menyelesaikan.`, 'galat');
     }
 
     await antreanModel.ubahStatus(item.id, status);
